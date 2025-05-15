@@ -58,7 +58,7 @@ def reset_payments():
 
 def send_whatsapp_message(to, message):
     if not to.startswith('+'):
-        to = '+' + to  # Adiciona o prefixo +
+        to = '+' + to
     headers = {
         'Authorization': f'Bearer {WHATSAPP_TOKEN}',
         'Content-Type': 'application/json'
