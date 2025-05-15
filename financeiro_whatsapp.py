@@ -1,5 +1,6 @@
 from flask import Flask, request
 import requests
+import os
 from datetime import datetime
 
 app = Flask(__name__)
@@ -150,4 +151,5 @@ def whatsapp():
             return '', 200
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    port = int(os.getenv('PORT', 5000))
+    app.run(host='0.0.0.0', port=port, debug=True)
