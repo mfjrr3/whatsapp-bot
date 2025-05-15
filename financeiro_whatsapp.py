@@ -6,8 +6,8 @@ from datetime import datetime
 app = Flask(__name__)
 
 # Configurações da API do WhatsApp
-WHATSAPP_API_URL = "https://graph.facebook.com/v17.0/580500768471309/messages"
-WHATSAPP_TOKEN = "EAAIkpmDmXbIBOx5nbmW2GTzcdBFdnOraVeQFegDXmmiFoH3cX0v4LCW9Jq7RKK8Co6V3VstkcBEjeBhDgroIPvuHqZCfeVEYILn2np2EXUJ29eQUw3mqNbFqfSPoeMMpGIZALFgxZCpJRHZCV4fjEjViZCrdZASEiae4zz6Lqmgd4ZByQlfWWott2ZCi3YJuHNzs4oPhkYQouzu1HpNnikZAZB8v9eSWgZCLtR4ZB5kgRIUZD"
+WHATSAPP_API_URL = "https://graph.facebook.com/v17.0/538669962667403/messages"
+WHATSAPP_TOKEN = "EAAIkpmDmXbIBO6iB8JFLeZB7Lzw22Yz6ijNuK0abUW8XiYLzX1UsRQyMAdYKwEQXYEwMdvJJxZAyZAkz6Ij7mEH7UtGcatWgTHZBjuW02fqrBv7IbSZAxXzuTA3eSTLekZBRdiUYGfrqgT1yQaknlEWktONyrCpGjbUMZANmo9Jec2sSHkdMhZCMqalDjickBOpnCFuB1a5trtFsVGZBzc1WTNhJ6gS8Uobvqs6cFPPAZD"
 VERIFY_TOKEN = "meutokenbot"
 
 # Estrutura para armazenar dados dos funcionários
