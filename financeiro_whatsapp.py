@@ -84,16 +84,30 @@ def whatsapp():
     if request.method == 'GET':
         verify_token = request.args.get('hub.verify_token')
         challenge = request.args.get('hub.challenge')
+        print(f"GET /whatsapp - Verify Token: {verify_token}, Challenge: {challenge}")
         if verify_token == VERIFY_TOKEN:
             return challenge, 200
+        print("GET /whatsapp - Verification failed")
         return "Verification failed", 403
     
     if request.method == 'POST':
         data = request.get_json()
-        if not data or 'entry' not in data or 'changes' not in data['entry'][0] or 'value' not in data['entry'][0]['changes'][0] or 'messages' not in data['entry'][0]['changes'][0]['value']:
+        print(f"POST /whatsapp - Payload recebido: {data}")
+        
+        if not data:
+            print("POST /whatsapp - Payload vazio")
             return '', 200
         
         try:
+            # Verificar estrutura do payload
+            if ('entry' not in data or not data['entry'] or
+                'changes' not in data['entry'][0] or not data['entry'][0]['changes'] or
+                'value' not in data['entry'][0]['changes'][0] or
+                'messages' not in data['entry'][0]['changes'][0]['value'] or
+                not data['entry'][0]['changes'][0]['value']['messages']):
+                print("POST /whatsapp - Estrutura de payload inválida")
+                return '', 200
+            
             from_number = data['entry'][0]['changes'][0]['value']['messages'][0]['from']
             msg = data['entry'][0]['changes'][0]['value']['messages'][0]['text']['body'].strip().lower()
             print(f"Mensagem recebida de {from_number}: {msg}")
@@ -108,7 +122,8 @@ def whatsapp():
                     _, nome, valor = parts[:3]
                     pix = parts[3] if len(parts) == 4 else None
                     response_msg = cadastrar_funcionario(nome, float(valor), pix)
-                except:
+                except Exception as e:
+                    print(f"Erro ao processar !cadastrar: {str(e)}")
                     response_msg = "Use: !cadastrar <nome> <valor_semanal> [<chave_pix>] (ex.: !cadastrar Manoel Junior 750 12345678900)"
             
             elif msg.startswith('!excluir'):
@@ -118,7 +133,8 @@ def whatsapp():
                         raise ValueError("Formato inválido")
                     _, nome = parts
                     response_msg = excluir_funcionario(nome)
-                except:
+                except Exception as e:
+                    print(f"Erro ao processar !excluir: {str(e)}")
                     response_msg = "Use: !excluir <nome> (ex.: !excluir Manoel Junior)"
             
             elif msg.startswith('!pagar'):
@@ -128,7 +144,8 @@ def whatsapp():
                         raise ValueError("Formato inválido")
                     _, nome, valor = parts
                     response_msg = registrar_pagamento(nome, float(valor))
-                except:
+                except Exception as e:
+                    print(f"Erro ao processar !pagar: {str(e)}")
                     response_msg = "Use: !pagar <nome> <valor> (ex.: !pagar Manoel Junior 200)"
             
             elif msg == '!relatorio':
