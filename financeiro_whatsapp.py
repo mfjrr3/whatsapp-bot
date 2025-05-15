@@ -7,7 +7,7 @@ app = Flask(__name__)
 
 # Configurações da API do WhatsApp
 WHATSAPP_API_URL = "https://graph.facebook.com/v17.0/579112278612275/messages"
-WHATSAPP_TOKEN = "EAAIkpmDmXbIBOZBehYtishUWMolK4ilOin7MNtMaNLVPM2uZBEZAimmkdz4rvnJak9UnN3JsDUZCL2Lg836Ay3rojyY2TFkv8NdEWDjoZAr8G8SlBpWOeyvYGZAOLNeSwOut7MUA0a5ICBXtKNmFBn4tnVS3FFf6CEmBrL11PZCQZBjWaCSSjTvzrcec49PObD2NZAiHoTCTNnSzJhV5EWSvL2DcOfmtzIZCR7ViXzt8cZD"
+WHATSAPP_TOKEN = "EAAIkpmDmXbIBO4o76DI3JJS9qLgfhqvNkVk8WXfaZA0P7ZAWcP10NSH5mktUJ6pAHQqpR2w4HL7V81fB5rJY7yAbXJi2oy1Vt9A88CiAuqJnxGtpdSiUfomXrJZCJd8SHcOAPeUOfkZAwGIM3UVhE61iQebQqoiUv8RZAonCHjcqKawHPvrEcPkK4NIakVtZCqrkBtyHGM"
 VERIFY_TOKEN = "meutokenbot"
 
 # Estrutura para armazenar dados dos funcionários
