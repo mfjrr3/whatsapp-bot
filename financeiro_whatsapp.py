@@ -7,8 +7,8 @@ app = Flask(__name__)
 
 # Configurações da API do WhatsApp
 WHATSAPP_API_URL = "https://graph.facebook.com/v17.0/579112278612275/messages"
-WHATSAPP_TOKEN = "EAAIkpmDmXbIBO4o76DI3JJS9qLgfhqvNkVk8WXfaZA0P7ZAWcP10NSH5mktUJ6pAHQqpR2w4HL7V81fB5rJY7yAbXJi2oy1Vt9A88CiAuqJnxGtpdSiUfomXrJZCJd8SHcOAPeUOfkZAwGIM3UVhE61iQebQqoiUv8RZAonCHjcqKawHPvrEcPkK4NIakVtZCqrkBtyHGM"
-VERIFY_TOKEN = "meutokenbot"
+WHATSAPP_TOKEN = os.getenv("WHATSAPP_TOKEN")
+VERIFY_TOKEN = os.getenv("VERIFY_TOKEN")
 
 # Estrutura para armazenar dados dos funcionários
 employees = {}  # {nome: {"valor_semanal": float, "pix": str}}
@@ -58,6 +58,9 @@ def reset_payments():
         payments[nome] = []
 
 def send_whatsapp_message(to, message):
+    if not WHATSAPP_TOKEN:
+        print("Erro: WHATSAPP_TOKEN não configurado")
+        return False
     if not to.startswith('+'):
         to = '+' + to
     headers = {
@@ -85,6 +88,9 @@ def whatsapp():
         verify_token = request.args.get('hub.verify_token')
         challenge = request.args.get('hub.challenge')
         print(f"GET /whatsapp - Verify Token: {verify_token}, Challenge: {challenge}")
+        if not VERIFY_TOKEN:
+            print("Erro: VERIFY_TOKEN não configurado")
+            return "Verification failed", 403
         if verify_token == VERIFY_TOKEN:
             return challenge, 200
         print("GET /whatsapp - Verification failed")
@@ -99,74 +105,82 @@ def whatsapp():
             return '', 200
         
         try:
-            # Parsing simplificado
-            messages = data.get('entry', [{}])[0].get('changes', [{}])[0].get('value', {}).get('messages', [])
-            if not messages:
-                print("POST /whatsapp - Sem mensagens no payload")
+            entries = data.get('entry', [])
+            if not entries:
+                print("POST /whatsapp - Sem 'entry' no payload")
                 return '', 200
             
-            for message in messages:
-                from_number = message.get('from')
-                msg_body = message.get('text', {}).get('body', '').strip().lower()
-                if not from_number or not msg_body:
-                    print("POST /whatsapp - Mensagem sem 'from' ou 'body'")
+            for entry in entries:
+                changes = entry.get('changes', [])
+                if not changes:
+                    print("POST /whatsapp - Sem 'changes' no entry")
                     continue
                 
-                print(f"Mensagem recebida de {from_number}: {msg_body}")
-                
-                response_msg = ""
-                
-                if msg_body.startswith('!cadastrar'):
-                    try:
-                        parts = msg_body.split(maxsplit=3)
-                        if len(parts) < 3:
-                            raise ValueError("Formato inválido")
-                        _, nome, valor = parts[:3]
-                        pix = parts[3] if len(parts) == 4 else None
-                        response_msg = cadastrar_funcionario(nome, float(valor), pix)
-                    except Exception as e:
-                        print(f"Erro ao processar !cadastrar: {str(e)}")
-                        response_msg = "Use: !cadastrar <nome> <valor_semanal> [<chave_pix>] (ex.: !cadastrar Manoel Junior 750 12345678900)"
-                
-                elif msg_body.startswith('!excluir'):
-                    try:
-                        parts = msg_body.split(maxsplit=2)
-                        if len(parts) != 2:
-                            raise ValueError("Formato inválido")
-                        _, nome = parts
-                        response_msg = excluir_funcionario(nome)
-                    except Exception as e:
-                        print(f"Erro ao processar !excluir: {str(e)}")
-                        response_msg = "Use: !excluir <nome> (ex.: !excluir Manoel Junior)"
-                
-                elif msg_body.startswith('!pagar'):
-                    try:
-                        parts = msg_body.split(maxsplit=2)
-                        if len(parts) != 3:
-                            raise ValueError("Formato inválido")
-                        _, nome, valor = parts
-                        response_msg = registrar_pagamento(nome, float(valor))
-                    except Exception as e:
-                        print(f"Erro ao processar !pagar: {str(e)}")
-                        response_msg = "Use: !pagar <nome> <valor> (ex.: !pagar Manoel Junior 200)"
-                
-                elif msg_body == '!relatorio':
-                    response_msg = gerar_relatorio()
-                
-                elif msg_body == '!resetar':
-                    reset_payments()
-                    response_msg = "Pagamentos resetados."
-                
-                else:
-                    response_msg = "Comandos:\n!cadastrar <nome> <valor_semanal> [<chave_pix>]\n!excluir <nome>\n!pagar <nome> <valor>\n!relatorio\n!resetar"
-                
-                success = send_whatsapp_message(from_number, response_msg)
-                print(f"Envio de resposta para {from_number}: {response_msg} - Sucesso: {success}")
+                for change in changes:
+                    value = change.get('value', {})
+                    messages = value.get('messages', [])
+                    if not messages:
+                        print("POST /whatsapp - Sem 'messages' no value")
+                        continue
+                    
+                    for message in messages:
+                        from_number = message.get('from')
+                        msg_body = message.get('text', {}).get('body', '').strip().lower()
+                        if not from_number or not msg_body:
+                            print("POST /whatsapp - Mensagem sem 'from' ou 'body'")
+                            continue
+                        
+                        print(f"Mensagem recebida de {from_number}: {msg_body}")
+                        
+                        response_msg = ""
+                        
+                        if msg_body.startswith('!cadastrar'):
+                            try:
+                                parts = msg_body.split(maxsplit=3)
+                                if len(parts) < 3:
+                                    raise ValueError("Formato inválido")
+                                _, nome, valor = parts[:3]
+                                pix = parts[3] if len(parts) == 4 else None
+                                response_msg = cadastrar_funcionario(nome, float(valor), pix)
+                            except Exception as e:
+                                print(f"Erro ao processar !cadastrar: {str(e)}")
+                                response_msg = "Use: !cadastrar <nome> <valor_semanal> [<chave_pix>] (ex.: !cadastrar Manoel Junior 750 12345678900)"
+                        
+                        elif msg_body.startswith('!excluir'):
+                            try:
+                                parts = msg_body.split(maxsplit=2)
+                                if len(parts) != 2:
+                                    raise ValueError("Formato inválido")
+                                _, nome = parts
+                                response_msg = excluir_funcionario(nome)
+                            except Exception as e:
+                                print(f"Erro ao processar !excluir: {str(e)}")
+                                response_msg = "Use: !excluir <nome> (ex.: !excluir Manoel Junior)"
+                        
+                        elif msg_body.startswith('!pagar'):
+                            try:
+                                parts = msg_body.split(maxsplit=2)
+                                if len(parts) != 3:
+                                    raise ValueError("Formato inválido")
+                                _, nome, valor = parts
+                                response_msg = registrar_pagamento(nome, float(valor))
+                            except Exception as e:
+                                print(f"Erro ao processar !pagar: {str(e)}")
+                                response_msg = "Use: !pagar <nome> <valor> (ex.: !pagar Manoel Junior 200)"
+                        
+                        elif msg_body == '!relatorio':
+                            response_msg = gerar_relatorio()
+                        
+                        elif msg_body == '!resetar':
+                            reset_payments()
+                            response_msg = "Pagamentos resetados."
+                        
+                        else:
+                            response_msg = "Comandos:\n!cadastrar <nome> <valor_semanal> [<chave_pix>]\n!excluir <nome>\n!pagar <nome> <valor>\n!relatorio\n!resetar"
+                        
+                        success = send_whatsapp_message(from_number, response_msg)
+                        print(f"Envio de resposta para {from_number}: {response_msg} - Sucesso: {success}")
             
-            return '', 200
-        
-        except Exception as e:
-            print(f"Erro ao processar mensagem: {str(e)}")
             return '', 200
         
         except Exception as e:
